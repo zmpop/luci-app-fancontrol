@@ -237,11 +237,11 @@ function validateCurveUi() {
 		Number(fieldValue('auto_full_temp'))
 	];
 	ranges = [
-		[ 45, 70 ],
-		[ 55, 78 ],
-		[ 60, 84 ],
-		[ 68, 88 ],
-		[ 80, 90 ]
+		[ 0, 100 ],
+		[ 0, 100 ],
+		[ 0, 100 ],
+		[ 0, 100 ],
+		[ 0, 100 ]
 	];
 
 	for (i = 0; i < values.length; i++) {
@@ -379,7 +379,7 @@ return view.extend({
 		o.description = '推荐曲线适合大多数 GL-MT3600BE；自定义温度只调整温度点，不允许修改风力档位。';
 
 		o = s.option(form.Value, 'auto_stop_temp', '停止温度');
-		o.datatype = 'range(45,70)';
+		o.datatype = 'range(0,100)';
 		o.default = '60';
 		o.placeholder = '60';
 		o.rmempty = false;
@@ -387,7 +387,7 @@ return view.extend({
 		o.description = '低速回落到此温度后，还需要稳定 90 秒才会停转。';
 
 		o = s.option(form.Value, 'auto_low_temp', '低速启动');
-		o.datatype = 'range(55,78)';
+		o.datatype = 'range(0,100)';
 		o.default = '65';
 		o.placeholder = '65';
 		o.rmempty = false;
@@ -395,21 +395,21 @@ return view.extend({
 		o.description = '达到此温度后，会先确认约 6 秒再启动低速，避免频繁启停。';
 
 		o = s.option(form.Value, 'auto_med_temp', '中速启动');
-		o.datatype = 'range(60,84)';
+		o.datatype = 'range(0,100)';
 		o.default = '72';
 		o.placeholder = '72';
 		o.rmempty = false;
 		o.depends({ mode: 'auto', auto_profile: 'custom' });
 
 		o = s.option(form.Value, 'auto_high_temp', '高速启动');
-		o.datatype = 'range(68,88)';
+		o.datatype = 'range(0,100)';
 		o.default = '79';
 		o.placeholder = '79';
 		o.rmempty = false;
 		o.depends({ mode: 'auto', auto_profile: 'custom' });
 
 		o = s.option(form.Value, 'auto_full_temp', '满速保护');
-		o.datatype = 'range(80,90)';
+		o.datatype = 'range(0,100)';
 		o.default = '86';
 		o.placeholder = '86';
 		o.rmempty = false;

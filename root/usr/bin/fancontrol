@@ -411,16 +411,16 @@ load_curve_config() {
 			high_c="$(uci_get auto_high_temp 79)"
 			full_c="$(uci_get auto_full_temp 86)"
 
-			if ! valid_c_range "$stop_c" 45 70; then
-				curve_reason="停止温度必须在 45-70°C"
-			elif ! valid_c_range "$low_c" 55 78; then
-				curve_reason="低速启动温度必须在 55-78°C"
-			elif ! valid_c_range "$med_c" 60 84; then
-				curve_reason="中速启动温度必须在 60-84°C"
-			elif ! valid_c_range "$high_c" 68 88; then
-				curve_reason="高速启动温度必须在 68-88°C"
-			elif ! valid_c_range "$full_c" 80 90; then
-				curve_reason="满速保护温度必须在 80-90°C"
+			if ! valid_c_range "$stop_c" 0 100; then
+				curve_reason="停止温度必须在 0-100°C"
+			elif ! valid_c_range "$low_c" 0 100; then
+				curve_reason="低速启动温度必须在 0-100°C"
+			elif ! valid_c_range "$med_c" 0 100; then
+				curve_reason="中速启动温度必须在 0-100°C"
+			elif ! valid_c_range "$high_c" 0 100; then
+				curve_reason="高速启动温度必须在 0-100°C"
+			elif ! valid_c_range "$full_c" 0 100; then
+				curve_reason="满速保护温度必须在 0-100°C"
 			elif [ $((low_c - stop_c)) -lt 3 ] || [ $((med_c - low_c)) -lt 3 ] || \
 				[ $((high_c - med_c)) -lt 3 ] || [ $((full_c - high_c)) -lt 3 ]; then
 				curve_reason="温度必须按停止、低速、中速、高速、满速递增，且相邻至少间隔 3°C"
