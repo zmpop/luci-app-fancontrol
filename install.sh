@@ -90,6 +90,12 @@ install_path() {
 	backup_path "$rel"
 	mkdir -p "$(dirname "$dst")" || die "failed to create $(dirname "$dst")"
 	cp -a "$src" "$dst" || die "failed to install $dst"
+
+	case "$rel" in
+		usr/bin/fancontrol|etc/init.d/fancontrol)
+			chmod +x "$dst" || die "failed to set executable permission on $dst"
+			;;
+	esac
 }
 
 [ "$(id -u)" = "0" ] || die "please run as root on the router"
