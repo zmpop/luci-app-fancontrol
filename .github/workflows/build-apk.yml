@@ -135,34 +135,6 @@ jobs:
           path: release/*
           if-no-files-found: error
 
-      - name: Publish rolling release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -eux
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -f continuous "${GITHUB_SHA}"
-          git push origin refs/tags/continuous --force
-
-          if gh release view continuous >/dev/null 2>&1; then
-            gh release view continuous --json assets --jq '.assets[].name' | while IFS= read -r asset; do
-              [ -n "$asset" ] || continue
-              gh release delete-asset continuous "$asset" -y || true
-            done
-            gh release upload continuous release/* --clobber
-            gh release edit continuous \
-              --title "Continuous APK build" \
-              --notes-file release/RELEASE_NOTES.md \
-              --prerelease
-          else
-            gh release create continuous release/* \
-              --title "Continuous APK build" \
-              --notes-file release/RELEASE_NOTES.md \
-              --prerelease \
-              --target "${GITHUB_SHA}"
-          fi
 
       - name: Auto tag and Publish release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
