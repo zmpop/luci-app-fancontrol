@@ -92,7 +92,7 @@ install_path() {
 	cp -a "$src" "$dst" || die "failed to install $dst"
 
 	case "$rel" in
-		usr/bin/fancontrol|etc/init.d/fancontrol)
+		/usr/bin/fancontrol|/etc/init.d/fancontrol)
 			chmod +x "$dst" || die "failed to set executable permission on $dst"
 			;;
 	esac
