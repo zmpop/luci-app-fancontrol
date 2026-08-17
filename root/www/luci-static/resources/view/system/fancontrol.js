@@ -164,19 +164,19 @@ function updateCurve(status) {
 
 	setCurveStep('curve-off',
 		'< ' + fmtTempInt(status.auto_start_low_mC),
-		'停止；低速回落到 ' + fmtTempInt(status.auto_drop_off_mC) + ' 后稳定 ' + (n(status.auto_hold_off) || 90) + ' 秒才停');
+		'停止（0% 风速）；低速回落到 ' + fmtTempInt(status.auto_drop_off_mC) + ' 后稳定 ' + (n(status.auto_hold_off) || 90) + ' 秒才停');
 	setCurveStep('curve-low',
 		'>= ' + fmtTempInt(status.auto_start_low_mC),
-		'低速 50%；中速回落到 ' + fmtTempInt(status.auto_drop_low_mC) + ' 后稳定 ' + (n(status.auto_hold_low) || 60) + ' 秒降回');
+		'低速 50% 转速；中速回落到 ' + fmtTempInt(status.auto_drop_low_mC) + ' 后稳定 ' + (n(status.auto_hold_low) || 60) + ' 秒降回');
 	setCurveStep('curve-med',
 		'>= ' + fmtTempInt(status.auto_start_med_mC),
-		'中速 70%；高速回落到 ' + fmtTempInt(status.auto_drop_med_mC) + ' 后稳定 ' + (n(status.auto_hold_med) || 60) + ' 秒降回');
+		'中速 70% 转速；高速回落到 ' + fmtTempInt(status.auto_drop_med_mC) + ' 后稳定 ' + (n(status.auto_hold_med) || 60) + ' 秒降回');
 	setCurveStep('curve-high',
 		'>= ' + fmtTempInt(status.auto_start_high_mC),
-		'高速 85%；满速回落到 ' + fmtTempInt(status.auto_drop_high_mC) + ' 后稳定 ' + (n(status.auto_hold_high) || 45) + ' 秒降回');
+		'高速 85% 转速；满速回落到 ' + fmtTempInt(status.auto_drop_high_mC) + ' 后稳定 ' + (n(status.auto_hold_high) || 45) + ' 秒降回');
 	setCurveStep('curve-full',
 		'>= ' + fmtTempInt(status.auto_start_full_mC),
-		'满速保护 100%，立即响应');
+		'满速保护 100% 转速，立即响应');
 }
 
 function updateStatus(status) {
@@ -294,7 +294,14 @@ function styleBlock() {
 		'.fan-note{line-height:1.7;color:#ddd}.fan-note strong{color:#fff}.fan-muted{color:#aaa;font-size:12px}',
 		'.fan-status-table .td{vertical-align:middle}.fan-status-table .td:first-child{width:190px;text-align:left}.fan-status-table .td:nth-child(2){text-align:left!important}',
 		'.fan-curve{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:10px;margin-top:10px}.fan-step{min-height:74px;padding:10px 12px;border-radius:8px;background:#1c1c1c;border:1px solid #444}.fan-step b{display:block;margin-bottom:4px;color:#fff}.fan-step span{color:#bbb;font-size:12px;line-height:1.5}',
-		'@media(max-width:900px){.fan-curve{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}}'
+		'@media(max-width:900px){.fan-curve{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}}',
+		'.fan-chart-card{background:#1c1c1c;border:1px solid #444;border-radius:8px;padding:15px;margin-top:15px}',
+		'.fan-chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;color:#fff;font-weight:700}',
+		'.fan-chart-container{position:relative;width:100%;height:220px;background:#121212;border-radius:6px;overflow:hidden}',
+		'.fan-chart-svg{width:100%;height:100%;display:block}',
+		'.fan-chart-legend{display:flex;gap:15px;margin-top:10px;font-size:12px;color:#aaa;justify-content:center}',
+		'.fan-legend-item{display:flex;align-items:center;gap:5px}',
+		'.fan-legend-color{width:12px;height:3px;border-radius:2px}'
 	]);
 }
 
@@ -352,6 +359,19 @@ return view.extend({
 				curveStep('curve-med'),
 				curveStep('curve-high'),
 				curveStep('curve-full')
+			]),
+			E('div', { 'class': 'fan-chart-card' }, [
+				E('div', { 'class': 'fan-chart-header' }, [
+					E('span', {}, '实时温度与转速曲线监控'),
+					E('span', { 'style': 'font-size:12px;color:#aaa' }, '最近 30 次轮询')
+				]),
+				E('div', { 'class': 'fan-chart-container' }, [
+					E('svg', { 'id': 'fancontrol-chart-svg', 'class': 'fan-chart-svg', 'viewBox': '0 0 600 200', 'preserveAspectRatio': 'none' })
+				]),
+				E('div', { 'class': 'fan-chart-legend' }, [
+					E('div', { 'class': 'fan-legend-item' }, [ E('span', { 'class': 'fan-legend-color', 'style': 'background:#ff9800' }), '控制温度 (°C)' ]),
+					E('div', { 'class': 'fan-legend-item' }, [ E('span', { 'class': 'fan-legend-color', 'style': 'background:#2196f3' }), '风扇转速 (RPM)' ])
+				])
 			])
 		]);
 
