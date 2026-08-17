@@ -97,9 +97,12 @@ jobs:
           grep -Eq "^CONFIG_PACKAGE_${PACKAGE_NAME}=(m|y)$" .config
           make "package/${PACKAGE_NAME}/compile" V=s -j"$(nproc)"
 
-      - name: Collect APK
+      - name: Extract version from Makefile and Collect APK
         run: |
           set -eux
+          pkg_version="$(grep -E '^PKG_VERSION:=' Makefile | cut -d'=' -f2 | tr -d '[:space:]')"
+          echo "PKG_VERSION=$pkg_version" >> $GITHUB_ENV
+
           mkdir -p release
           find sdk/bin/packages -type f \( -name "${PACKAGE_NAME}-*.apk" -o -name "${PACKAGE_NAME}_*.apk" \) \
             ! -name "${PACKAGE_NAME}-src-*.apk" \
@@ -165,23 +168,35 @@ jobs:
               --target "${GITHUB_SHA}"
           fi
 
-      - name: Publish tagged release
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+      - name: Auto tag and Publish release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eux
-          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
-            gh release view "${GITHUB_REF_NAME}" --json assets --jq '.assets[].name' | while IFS= read -r asset; do
+          pkg_version="${PKG_VERSION}"
+          tag_name="v${pkg_version}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if ! git rev-parse "${tag_name}" >/dev/null 2>&1; then
+            git tag "${tag_name}" "${GITHUB_SHA}"
+            git push origin "refs/tags/${tag_name}"
+          fi
+
+          if gh release view "${tag_name}" >/dev/null 2>&1; then
+            gh release view "${tag_name}" --json assets --jq '.assets[].name' | while IFS= read -r asset; do
               [ -n "$asset" ] || continue
-              gh release delete-asset "${GITHUB_REF_NAME}" "$asset" -y || true
+              gh release delete-asset "${tag_name}" "$asset" -y || true
             done
-            gh release upload "${GITHUB_REF_NAME}" release/* --clobber
-            gh release edit "${GITHUB_REF_NAME}" \
-              --title "${GITHUB_REF_NAME}" \
+            gh release upload "${tag_name}" release/* --clobber
+            gh release edit "${tag_name}" \
+              --title "Release ${tag_name}" \
               --notes-file release/RELEASE_NOTES.md
           else
-            gh release create "${GITHUB_REF_NAME}" release/* \
-              --title "${GITHUB_REF_NAME}" \
-              --notes-file release/RELEASE_NOTES.md
+            gh release create "${tag_name}" release/* \
+              --title "Release ${tag_name}" \
+              --notes-file release/RELEASE_NOTES.md \
+              --target "${GITHUB_SHA}"
           fi
