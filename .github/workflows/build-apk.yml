@@ -124,11 +124,7 @@ jobs:
             echo "- Branch or tag: ${GITHUB_REF_NAME}"
             echo ""
             echo "### Changelog / Recent Commits:"
-            if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ -n "${GITHUB_BEFORE:-}" ] && [ "${GITHUB_BEFORE}" != "0000000000000000000000000000000000000000" ]; then
-              git log --no-merges --pretty=format:"- %s (%an)" "${GITHUB_BEFORE}..${GITHUB_SHA}" || true
-            else
-              git log -n 10 --no-merges --pretty=format:"- %s (%an)" || true
-            fi
+            git log -n 1 --no-merges --pretty=format:"- %s (%an)" || true
             echo ""
           } > release/RELEASE_NOTES.md
 
@@ -192,11 +188,11 @@ jobs:
             done
             gh release upload "${tag_name}" release/* --clobber
             gh release edit "${tag_name}" \
-              --title "Release ${tag_name}" \
+              --title "${tag_name}" \
               --notes-file release/RELEASE_NOTES.md
           else
             gh release create "${tag_name}" release/* \
-              --title "Release ${tag_name}" \
+              --title "${tag_name}" \
               --notes-file release/RELEASE_NOTES.md \
               --target "${GITHUB_SHA}"
           fi
