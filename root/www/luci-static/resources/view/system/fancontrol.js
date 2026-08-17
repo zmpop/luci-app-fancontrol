@@ -93,6 +93,8 @@ function profileText(status) {
 		return '自定义温度';
 	if (status.auto_profile == 'custom' && Number(status.curve_valid) != 1)
 		return '自定义温度无效，已使用推荐曲线';
+	if (status.auto_profile == 'low')
+		return '低温曲线';
 	return '推荐曲线';
 }
 
@@ -372,6 +374,7 @@ return view.extend({
 
 		o = s.option(form.ListValue, 'auto_profile', '温控方案');
 		o.value('preset', '推荐曲线');
+		o.value('low', '低温曲线');
 		o.value('custom', '自定义温度');
 		o.default = 'preset';
 		o.rmempty = false;

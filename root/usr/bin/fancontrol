@@ -357,15 +357,27 @@ rpm_percent_of_max() {
 }
 
 set_default_curve() {
-	auto_profile="${1:-preset}"
-	AUTO_DROP_OFF="$PRESET_STOP"
-	AUTO_START_LOW="$PRESET_START_LOW"
-	AUTO_START_MED="$PRESET_START_MED"
-	AUTO_START_HIGH="$PRESET_START_HIGH"
-	AUTO_START_FULL="$PRESET_START_FULL"
-	AUTO_DROP_LOW=68000
-	AUTO_DROP_MED=75000
-	AUTO_DROP_HIGH=82000
+	local profile="${1:-preset}"
+	auto_profile="$profile"
+	if [ "$profile" = "low" ]; then
+		AUTO_DROP_OFF=30000     # 30°C
+		AUTO_START_LOW=35000    # 35°C
+		AUTO_START_MED=45000    # 45°C
+		AUTO_START_HIGH=55000   # 55°C
+		AUTO_START_FULL=62000   # 62°C
+		AUTO_DROP_LOW=40000
+		AUTO_DROP_MED=50000
+		AUTO_DROP_HIGH=58000
+	else
+		AUTO_DROP_OFF="$PRESET_STOP"
+		AUTO_START_LOW="$PRESET_START_LOW"
+		AUTO_START_MED="$PRESET_START_MED"
+		AUTO_START_HIGH="$PRESET_START_HIGH"
+		AUTO_START_FULL="$PRESET_START_FULL"
+		AUTO_DROP_LOW=68000
+		AUTO_DROP_MED=75000
+		AUTO_DROP_HIGH=82000
+	fi
 }
 
 valid_c_range() {
@@ -431,6 +443,9 @@ load_curve_config() {
 
 			curve_valid=0
 			set_default_curve custom
+			;;
+		low)
+			set_default_curve low
 			;;
 		*)
 			set_default_curve preset
