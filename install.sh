@@ -91,7 +91,7 @@ install_path() {
 	mkdir -p "$(dirname "$dst")" || die "failed to create $(dirname "$dst")"
 	cp -a "$src" "$dst" || die "failed to install $dst"
 
-	case "$rel" in
+	case "$dst" in
 		/usr/bin/fancontrol|/etc/init.d/fancontrol)
 			chmod +x "$dst" || die "failed to set executable permission on $dst"
 			;;
@@ -130,6 +130,7 @@ mkdir -p "$BACKUP_DIR" || die "failed to create backup directory"
 
 install_path "$SRC_DIR" "usr/bin/fancontrol"
 install_path "$SRC_DIR" "etc/init.d/fancontrol"
+chmod +x /usr/bin/fancontrol /etc/init.d/fancontrol
 install_path "$SRC_DIR" "usr/share/luci/menu.d/luci-app-fancontrol.json"
 install_path "$SRC_DIR" "usr/share/rpcd/acl.d/luci-app-fancontrol.json"
 install_path "$SRC_DIR" "usr/share/ucitrack/luci-app-fancontrol.json"
