@@ -6,8 +6,113 @@
 'require ui';
 'require uci';
 
+var historyTemps = [];
+var historyRpms = [];
+var MAX_HISTORY = 30;
+
+function pushHistory(temp, rpm) {
+	var t = Number(temp);
+	var r = Number(rpm);
+	if (isNaN(t)) t = 0;
+	if (isNaN(r)) r = 0;
+	
+	historyTemps.push(t);
+	historyRpms.push(r);
+
+	if (historyTemps.length > MAX_HISTORY) {
+		historyTemps.shift();
+		historyRpms.shift();
+	}
+}
+
+function updateChart() {
+	var svg = document.getElementById('fancontrol-chart-svg');
+	if (!svg) return;
+
+	var width = 600;
+	var height = 200;
+	var padding = 40;
+
+	if (historyTemps.length === 0) return;
+
+	var minTemp = 20, maxTemp = 90;
+	var minRpm = 0, maxRpm = 6000;
+
+	for (var i = 0; i < historyTemps.length; i++) {
+		if (historyTemps[i] > maxTemp) maxTemp = Math.ceil(historyTemps[i] / 10) * 10;
+		if (historyRpms[i] > maxRpm) maxRpm = Math.ceil(historyRpms[i] / 1000) * 1000;
+	}
+
+	var tempPoints = [];
+	var rpmPoints = [];
+
+	var stepX = (width - padding * 2) / Math.max(1, MAX_HISTORY - 1);
+
+	for (var i = 0; i < historyTemps.length; i++) {
+		var x = padding + i * stepX;
+		var yt = height - padding - ((historyTemps[i] - minTemp) / (maxTemp - minTemp)) * (height - padding * 2);
+		var yr = height - padding - ((historyRpms[i] - minRpm) / (maxRpm - minRpm)) * (height - padding * 2);
+		tempPoints.push(x.toFixed(1) + ',' + yt.toFixed(1));
+		rpmPoints.push(x.toFixed(1) + ',' + yr.toFixed(1));
+	}
+
+	svg.innerHTML = '';
+
+	for (var i = 0; i <= 4; i++) {
+		var y = padding + (height - padding * 2) * (i / 4);
+		var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+		line.setAttribute('x1', padding);
+		line.setAttribute('y1', y);
+		line.setAttribute('x2', width - padding);
+		line.setAttribute('y2', y);
+		line.setAttribute('stroke', '#333');
+		line.setAttribute('stroke-dasharray', '3,3');
+		svg.appendChild(line);
+
+		var tempValLabel = Math.round(maxTemp - (maxTemp - minTemp) * (i / 4));
+		var textTemp = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+		textTemp.setAttribute('x', padding - 6);
+		textTemp.setAttribute('y', y + 4);
+		textTemp.setAttribute('fill', '#ff9800');
+		textTemp.setAttribute('font-size', '10');
+		textTemp.setAttribute('text-anchor', 'end');
+		textTemp.textContent = tempValLabel + '°';
+		svg.appendChild(textTemp);
+
+		var rpmValLabel = Math.round(maxRpm - (maxRpm - minRpm) * (i / 4));
+		var textRpm = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+		textRpm.setAttribute('x', width - padding + 6);
+		textRpm.setAttribute('y', y + 4);
+		textRpm.setAttribute('fill', '#2196f3');
+		textRpm.setAttribute('font-size', '10');
+		textRpm.setAttribute('text-anchor', 'start');
+		textRpm.textContent = rpmValLabel;
+		svg.appendChild(textRpm);
+	}
+
+	var polyTemp = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+	polyTemp.setAttribute('fill', 'none');
+	polyTemp.setAttribute('stroke', '#ff9800');
+	polyTemp.setAttribute('stroke-width', '2');
+	polyTemp.setAttribute('points', tempPoints.join(' '));
+	svg.appendChild(polyTemp);
+
+	var polyRpm = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+	polyRpm.setAttribute('fill', 'none');
+	polyRpm.setAttribute('stroke', '#2196f3');
+	polyRpm.setAttribute('stroke-width', '2');
+	polyRpm.setAttribute('points', rpmPoints.join(' '));
+	svg.appendChild(polyRpm);
+}
+
 function fanStatus() {
-	return L.resolveDefault(fs.exec_direct('/usr/bin/fancontrol', [ 'status' ], 'json'), {});
+	return L.resolveDefault(fs.exec_direct('/usr/bin/fancontrol', [ 'status' ], 'json'), {}).then(function(res) {
+		var tempVal = (res.control_temp_mC || res.cpu_temp_mC || res.raw_temp_mC || 0) / 1000;
+		var rpmVal = Number(res.rpm || 0);
+		pushHistory(tempVal, rpmVal);
+		updateChart();
+		return res;
+	});
 }
 
 function n(value) {
